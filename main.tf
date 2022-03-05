@@ -50,9 +50,3 @@ module "private_subnet_b" {
   az = "${var.region}b"
   nat_gw_id = module.public_subnet_b.nat_gw_id // nat gateway in public subnet b
 }
-
-module "key_pair" {
-  source = "./modules/key_pair"
-  key_name = "tf_demo_key"
-  key_filename = "~/.ssh/id_ed25519.pub"
-}
