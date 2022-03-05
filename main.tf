@@ -52,7 +52,7 @@ module "private_subnet_b" {
 }
 
 // registry
-resource "aws_ecr_repository" "aws-ecr" {
+resource "aws_ecr_repository" "aws-ecr-tf-demo-app" {
   name = "tf-demo-app"
 }
 
@@ -79,60 +79,55 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
 }
 
 // create the cluster
-resource "aws_ecs_cluster" "aws-ecs-cluster" {
+resource "aws_ecs_cluster" "tf-demo-ecs-cluster" {
   name = "tf-demo-cluster"
 }
 
 // create Log Group on CloudWatch to get the containers logs
-resource "aws_cloudwatch_log_group" "log-group" {
+resource "aws_cloudwatch_log_group" "tf-demo-log-group" {
   name = "tf-demo-logs"
 }
 
 // Task Definition compatible with AWS FARGATE
-#data "template_file" "env_vars" {
-#  template = file("env_vars.json")
-#}
-#
-#resource "aws_ecs_task_definition" "aws-ecs-task" {
-#  family = "tf-demo-task"
-#
-#  container_definitions = <<DEFINITION
-#  [
-#    {
-#      "name": "tf-demo-app",
-#      "image": "${aws_ecr_repository.aws-ecr.repository_url}:latest",
-#      "entryPoint": [],
-#      "environment": ${data.template_file.env_vars.rendered},
-#      "essential": true,
-#      "logConfiguration": {
-#        "logDriver": "awslogs",
-#        "options": {
-#          "awslogs-group": "${aws_cloudwatch_log_group.log-group.id}",
-#          "awslogs-region": "${var.region}",
-#          "awslogs-stream-prefix": "tf-demo-app"
-#        }
-#      },
-#      "portMappings": [
-#        {
-#          "containerPort": 8080,
-#          "hostPort": 8080
-#        }
-#      ],
-#      "cpu": 256,
-#      "memory": 512,
-#      "networkMode": "awsvpc"
-#    }
-#  ]
-#  DEFINITION
-#
-#  requires_compatibilities = ["FARGATE"]
-#  network_mode             = "awsvpc"
-#  memory                   = "512"
-#  cpu                      = "256"
-#  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
-#  task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
-#}
-#
-#data "aws_ecs_task_definition" "main" {
-#  task_definition = aws_ecs_task_definition.aws-ecs-task.family
-#}
+resource "aws_ecs_task_definition" "tf-demo-ecs-task-definition" {
+  family = "tf-demo-task"
+
+  container_definitions = <<DEFINITION
+  [
+    {
+      "name": "tf-demo-app-container",
+      "image": "${aws_ecr_repository.aws-ecr-tf-demo-app.repository_url}:latest",
+      "entryPoint": [],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.tf-demo-log-group.id}",
+          "awslogs-region": "${var.region}",
+          "awslogs-stream-prefix": "tf-demo-app"
+        }
+      },
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        }
+      ],
+      "cpu": 256,
+      "memory": 512,
+      "networkMode": "awsvpc"
+    }
+  ]
+  DEFINITION
+
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  memory                   = "512"
+  cpu                      = "256"
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+  task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
+}
+
+data "aws_ecs_task_definition" "main" {
+  task_definition = aws_ecs_task_definition.tf-demo-ecs-task-definition.family
+}
