@@ -9,48 +9,6 @@ provider "aws" {
   }
 }
 
-module "tf_demo_vpc" {
-  source = "./modules/vpc"
-  name = "tf-demo-aws-vpc"
-  vpc_cidr = "10.0.0.0/16" // 10.0.0.0 - 10.0.255.255
-}
-
-module "public_subnet_a" {
-  source = "./modules/public_subnet"
-  name = "tf-demo-public-subnet-a"
-  vpc_id = module.tf_demo_vpc.vpc_id
-  subnet_cidr_block = "10.0.0.0/24" // 251 public addresses
-  az = "${var.region}a"
-  igw_id = module.tf_demo_vpc.igw_id // vpc internet gateway
-}
-
-module "public_subnet_b" {
-  source = "./modules/public_subnet"
-  name = "tf-demo-public-subnet-b"
-  vpc_id = module.tf_demo_vpc.vpc_id
-  subnet_cidr_block = "10.0.1.0/24" // 251 public addresses
-  az = "${var.region}b"
-  igw_id = module.tf_demo_vpc.igw_id // vpc internet gateway
-}
-
-module "private_subnet_a" {
-  source = "./modules/private_subnet"
-  name = "tf-demo-private-subnet-a"
-  vpc_id = module.tf_demo_vpc.vpc_id
-  subnet_cidr_block = "10.0.16.0/20" // 4091 private addresses
-  az = "${var.region}a"
-  nat_gw_id = module.public_subnet_a.nat_gw_id // nat gateway in public subnet a
-}
-
-module "private_subnet_b" {
-  source = "./modules/private_subnet"
-  name = "tf-demo-private-subnet-b"
-  vpc_id = module.tf_demo_vpc.vpc_id
-  subnet_cidr_block = "10.0.32.0/20" // 4091 private addresses
-  az = "${var.region}b"
-  nat_gw_id = module.public_subnet_b.nat_gw_id // nat gateway in public subnet b
-}
-
 // registry
 resource "aws_ecr_repository" "aws-ecr-tf-demo-app" {
   name = "tf-demo-app"
@@ -130,4 +88,107 @@ resource "aws_ecs_task_definition" "tf-demo-ecs-task-definition" {
 
 data "aws_ecs_task_definition" "main" {
   task_definition = aws_ecs_task_definition.tf-demo-ecs-task-definition.family
+}
+
+resource "aws_ecs_service" "tf-demo-ecs-service" {
+  name                 = "tf-demo-ecs-service"
+  cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
+  task_definition      = "${aws_ecs_task_definition.tf-demo-ecs-task-definition.family}:${max(aws_ecs_task_definition.tf-demo-ecs-task-definition.revision, data.aws_ecs_task_definition.main.revision)}"
+  launch_type          = "FARGATE"
+  scheduling_strategy  = "REPLICA"
+  desired_count        = 2
+  force_new_deployment = true
+
+  network_configuration {
+    subnets          = [module.private_subnet_a.id, module.private_subnet_b.id]
+    assign_public_ip = false
+    security_groups = [
+      aws_security_group.service_security_group.id,
+      aws_security_group.load_balancer_security_group.id
+    ]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.target_group.arn
+    container_name   = "tf-demo-app-container"
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener.listener]
+}
+
+resource "aws_security_group" "service_security_group" {
+  vpc_id = module.tf_demo_vpc.vpc_id
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.load_balancer_security_group.id] //only allow ingress from load balancer
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+resource "aws_alb" "application_load_balancer" {
+  name               = "tf-demo-alb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = [module.public_subnet_a.id, module.public_subnet_b.id]
+  security_groups    = [aws_security_group.load_balancer_security_group.id]
+}
+
+resource "aws_security_group" "load_balancer_security_group" {
+  vpc_id = module.tf_demo_vpc.vpc_id
+
+  ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+resource "aws_lb_target_group" "target_group" {
+  name        = "tf-demo-tg"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = module.tf_demo_vpc.vpc_id
+
+  health_check {
+    healthy_threshold   = "3"
+    interval            = "300"
+    protocol            = "HTTP"
+    matcher             = "200"
+    timeout             = "3"
+    path                = "/" //route on the application that the Load Balancer will use to check the status
+    unhealthy_threshold = "2"
+  }
+}
+
+resource "aws_lb_listener" "listener" {
+  load_balancer_arn = aws_alb.application_load_balancer.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.target_group.id
+  }
 }
