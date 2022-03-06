@@ -32,7 +32,7 @@ resource "aws_cloudwatch_log_group" "tf-demo-app-log-group" {
 }
 
 // Task Definition compatible with AWS FARGATE
-resource "aws_ecs_task_definition" "tf-demo-ecs-task-definition" {
+resource "aws_ecs_task_definition" "tf-demo-app-task-definition" {
   family = "tf-demo-task"
 
   container_definitions = <<DEFINITION
@@ -71,14 +71,10 @@ resource "aws_ecs_task_definition" "tf-demo-ecs-task-definition" {
   task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
-data "aws_ecs_task_definition" "main" {
-  task_definition = aws_ecs_task_definition.tf-demo-ecs-task-definition.family
-}
-
 resource "aws_ecs_service" "tf-demo-ecs-service" {
   name                 = "tf-demo-ecs-service"
   cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
-  task_definition      = "${aws_ecs_task_definition.tf-demo-ecs-task-definition.family}:${max(aws_ecs_task_definition.tf-demo-ecs-task-definition.revision, data.aws_ecs_task_definition.main.revision)}"
+  task_definition      = aws_ecs_task_definition.tf-demo-app-task-definition.arn
   launch_type          = "FARGATE"
   scheduling_strategy  = "REPLICA"
   desired_count        = 2
