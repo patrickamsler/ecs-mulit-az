@@ -71,10 +71,14 @@ resource "aws_ecs_task_definition" "tf-demo-app-task-definition" {
   task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
+data "aws_ecs_task_definition" "main" {
+  task_definition = aws_ecs_task_definition.tf-demo-app-task-definition.family
+}
+
 resource "aws_ecs_service" "tf-demo-ecs-service" {
   name                 = "tf-demo-ecs-service"
   cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
-  task_definition      = aws_ecs_task_definition.tf-demo-app-task-definition.arn
+  task_definition      = "${aws_ecs_task_definition.tf-demo-app-task-definition.family}:${max(aws_ecs_task_definition.tf-demo-app-task-definition.revision, data.aws_ecs_task_definition.main.revision)}"
   launch_type          = "FARGATE"
   scheduling_strategy  = "REPLICA"
   desired_count        = 2
