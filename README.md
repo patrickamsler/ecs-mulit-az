@@ -36,7 +36,7 @@ curl localhost
 
 Tag and push to ECR Repository
 ```shell
-docker tag example-app 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
+docker tag tf-demo-app 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
 aws ecr get-login-password --region eu-central-1 --profile patrick-private | docker login --username AWS --password-stdin 663216156844.dkr.ecr.eu-central-1.amazonaws.com
 docker push 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
 ```
