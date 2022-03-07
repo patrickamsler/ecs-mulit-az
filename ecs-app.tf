@@ -32,53 +32,54 @@ resource "aws_cloudwatch_log_group" "tf-demo-app-log-group" {
 }
 
 // Task Definition compatible with AWS FARGATE
-resource "aws_ecs_task_definition" "tf-demo-app-task-definition" {
-  family = "tf-demo-task"
+#resource "aws_ecs_task_definition" "tf-demo-app-task-definition" {
+#  family = "tf-demo-task"
+#
+#  container_definitions = <<DEFINITION
+#  [
+#    {
+#      "name": "tf-demo-app-container",
+#      "image": "${aws_ecr_repository.aws-ecr-tf-demo-app.repository_url}:latest",
+#      "entryPoint": [],
+#      "essential": true,
+#      "logConfiguration": {
+#        "logDriver": "awslogs",
+#        "options": {
+#          "awslogs-group": "${aws_cloudwatch_log_group.tf-demo-app-log-group.id}",
+#          "awslogs-region": "${var.region}",
+#          "awslogs-stream-prefix": "tf-demo-app"
+#        }
+#      },
+#      "portMappings": [
+#        {
+#          "containerPort": 80,
+#          "hostPort": 80
+#        }
+#      ],
+#      "cpu": 256,
+#      "memory": 512,
+#      "networkMode": "awsvpc"
+#    }
+#  ]
+#  DEFINITION
+#
+#  requires_compatibilities = ["FARGATE"]
+#  network_mode             = "awsvpc"
+#  memory                   = "512"
+#  cpu                      = "256"
+#  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+#  task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
+#}
 
-  container_definitions = <<DEFINITION
-  [
-    {
-      "name": "tf-demo-app-container",
-      "image": "${aws_ecr_repository.aws-ecr-tf-demo-app.repository_url}:latest",
-      "entryPoint": [],
-      "essential": true,
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "${aws_cloudwatch_log_group.tf-demo-app-log-group.id}",
-          "awslogs-region": "${var.region}",
-          "awslogs-stream-prefix": "tf-demo-app"
-        }
-      },
-      "portMappings": [
-        {
-          "containerPort": 80,
-          "hostPort": 80
-        }
-      ],
-      "cpu": 256,
-      "memory": 512,
-      "networkMode": "awsvpc"
-    }
-  ]
-  DEFINITION
-
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  memory                   = "512"
-  cpu                      = "256"
-  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
-  task_role_arn            = aws_iam_role.ecsTaskExecutionRole.arn
-}
-
+// read task definition from aws
 data "aws_ecs_task_definition" "main" {
-  task_definition = aws_ecs_task_definition.tf-demo-app-task-definition.family
+  task_definition = "tf-demo-task"
 }
 
 resource "aws_ecs_service" "tf-demo-ecs-service" {
   name                 = "tf-demo-ecs-service"
   cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
-  task_definition      = "${aws_ecs_task_definition.tf-demo-app-task-definition.family}:${max(aws_ecs_task_definition.tf-demo-app-task-definition.revision, data.aws_ecs_task_definition.main.revision)}"
+  task_definition      = "tf-demo-task:${data.aws_ecs_task_definition.main.revision}" // use the latest task definition from aws
   launch_type          = "FARGATE"
   scheduling_strategy  = "REPLICA"
   desired_count        = 2
