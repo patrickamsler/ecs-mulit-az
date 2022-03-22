@@ -32,5 +32,5 @@
   "runtimePlatform": {
     "operatingSystemFamily": "LINUX"
   },
-  "requiresCompatibilities": ["FARGATE"]
+  "requiresCompatibilities": ["EC2"]
 }

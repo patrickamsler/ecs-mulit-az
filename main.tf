@@ -8,8 +8,3 @@ provider "aws" {
     }
   }
 }
-
-// create the cluster
-resource "aws_ecs_cluster" "tf-demo-ecs-cluster" {
-  name = "tf-demo-cluster"
-}

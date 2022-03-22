@@ -80,7 +80,7 @@ resource "aws_ecs_service" "tf-demo-ecs-service" {
   name                 = "tf-demo-ecs-service"
   cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
   task_definition      = "tf-demo-task:${data.aws_ecs_task_definition.main.revision}" // use the latest task definition from aws
-  launch_type          = "FARGATE"
+  launch_type          = "EC2"
   scheduling_strategy  = "REPLICA"
   desired_count        = 2
   force_new_deployment = true
