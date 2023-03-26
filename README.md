@@ -1,15 +1,50 @@
-# ecs-mulit-az
+# Multiple Availability Zones with Amazon ECS and Terraform
 
-## How to set up the AWS environment
+## Table of Contents
 
-Register task definition
+- [Description](#Description)
+- [Features](#features)
+- [Links](#links)
+- [How to create the AWS environment with terraform](#how-to-create-the-aws-environment-with-terraform)
+- [How to run the demo app](#how-to-run-the-demo-app)
+
+##  Description
+
+This Github project is a demonstration of how to deploy a Dockerized application using Amazon Elastic Container Service (ECS) on AWS. The infrastructure is defined using Terraform, and includes private and public subnets spread across multiple availability zones. The project is a good starting point for those who want to learn how to use ECS and Terraform together, and want to deploy their application in a highly available and scalable manner on AWS.
+
+## Features
+
+- Uses Terraform to manage infrastructure as code
+- Deploys an AWS ECS cluster with private and public subnets in multiple availability zones
+- Configures the ECS cluster with a load balancer and auto scaling group
+- Provides an example Dockerfile and task definition file
+
+## Links
+
+- [Terraform](https://aws.amazon.com/terraform/)
+- [AWS ECS](https://aws.amazon.com/ecs/)
+- [ECS with Multiple Availability Zones](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-service-discovery.html)
+
+
+## How to create the AWS environment with terraform
+
+Terraform uses the AWS CLI under the hood. Install the AWS CLI on your machine and configure it work with your AWS account by running the aws configure command and providing your AWS access key, secret access key, and default region.
+
+THe ECS task definition needs to be registered before you apply the terraform script.
 ```shell
-aws ecs register-task-definition --profile patrick-private --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
+aws ecs register-task-definition --profile <aws-profil> --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
 ```
 
-Setup the environment
+The task definition includes the Docker image to use, the CPU and memory requirements, the networking configuration, and other details needed to launch the container. 
+
+Once a task definition is registered, you can create the AWS environment with terraform.
 ```shell
 terraform init
+terraform plan
+```
+
+If everything looks good, run terraform apply to create the resources in the specified AWS account and region.
+```shell
 terraform apply
 ```
 
@@ -20,7 +55,7 @@ Terraform creates following components:
 * ECS task definition, tasks and a service for the demo app
 * ALB in the public subnet
 
-Destroy the environment
+The environment can be destroyed with:
 ```shell
 terraform destroy
 ```
