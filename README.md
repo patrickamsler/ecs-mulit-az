@@ -46,7 +46,7 @@ aws ecr get-login-password --region eu-central-1 --profile patrick-private | doc
 docker push 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
 ```
 
-Tag and push to Docker Hub Repository
+Tag and push the image to Docker Hub Repository
 ```shell
 docker tag tf-demo-app patrickamsler/tf-demo-app:latest
 docker login
