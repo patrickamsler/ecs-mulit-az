@@ -13,7 +13,7 @@ terraform init
 terraform apply
 ```
 
-Terraform will start up:
+Terraform creates following components:
 * VPC with two private and two public subnets
 * ECR container repository
 * ECS cluster
