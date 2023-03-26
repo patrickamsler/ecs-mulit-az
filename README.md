@@ -30,7 +30,7 @@ This Github project is a demonstration of how to deploy a Dockerized application
 
 Terraform uses the AWS CLI under the hood. Install the AWS CLI on your machine and configure it to work with your AWS account by running the aws configure command and providing your AWS access key, secret access key, and default region.
 
-THe ECS task definition needs to be registered before you apply the terraform script.
+The ECS task definition needs to be registered before you apply the terraform script.
 ```shell
 aws ecs register-task-definition --profile <aws-profil> --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
 ```
