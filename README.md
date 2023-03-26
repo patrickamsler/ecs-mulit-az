@@ -21,7 +21,7 @@ This Github project is a demonstration of how to deploy a Dockerized application
 
 ## Links
 
-- [Terraform](https://aws.amazon.com/terraform/)
+- [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [AWS ECS](https://aws.amazon.com/ecs/)
 - [ECS with Multiple Availability Zones](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-service-discovery.html)
 
