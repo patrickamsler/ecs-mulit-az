@@ -76,16 +76,16 @@ curl localhost
 
 Tag and push to ECR Repository
 ```shell
-docker tag tf-demo-app 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
-aws ecr get-login-password --region eu-central-1 --profile patrick-private | docker login --username AWS --password-stdin 663216156844.dkr.ecr.eu-central-1.amazonaws.com
-docker push 663216156844.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
+docker tag tf-demo-app 663216139861.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
+aws ecr get-login-password --region eu-central-1 --profile <aws-profil> | docker login --username AWS --password-stdin 663216139861.dkr.ecr.eu-central-1.amazonaws.com
+docker push 663216139861.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
 ```
 
 Tag and push the image to Docker Hub Repository
 ```shell
-docker tag tf-demo-app patrickamsler/tf-demo-app:latest
+docker tag tf-demo-app <repo>/tf-demo-app:latest
 docker login
-docker push patrickamsler/tf-demo-app:latest
+docker push <repo>/tf-demo-app:latest
 ```
 
 Deploy new version to ECS
@@ -93,8 +93,8 @@ Deploy new version to ECS
 2. create new revision of the task definition
 3. update ecs service to use the new task definition
 ```shell
-aws ecs register-task-definition --profile patrick-private --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
-aws ecs update-service --profile patrick-private --region eu-central-1 --cluster tf-demo-cluster --service tf-demo-ecs-service --task-definition tf-demo-task:<revision>
+aws ecs register-task-definition --profile <aws-profil> --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
+aws ecs update-service --profile <aws-profil> --region eu-central-1 --cluster tf-demo-cluster --service tf-demo-ecs-service --task-definition tf-demo-task:<revision>
 ```
 
 Access demo app in Web Browser http://tf-demo-alb-1374846504.eu-central-1.elb.amazonaws.com/
