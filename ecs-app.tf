@@ -78,7 +78,7 @@ data "aws_ecs_task_definition" "main" {
 
 resource "aws_ecs_service" "tf-demo-ecs-service" {
   name                 = "tf-demo-ecs-service"
-  cluster              = aws_ecs_cluster.tf-demo-ecs-cluster.id
+  cluster              = module.ecs_cluster.ecs_cluster_id
   task_definition      = "tf-demo-task:${data.aws_ecs_task_definition.main.revision}" // use the latest task definition from aws
   launch_type          = "FARGATE"
   scheduling_strategy  = "REPLICA"

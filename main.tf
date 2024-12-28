@@ -9,6 +9,7 @@ provider "aws" {
   }
 }
 
+# Create a VPC and subnets
 module "network" {
   source = "./modules/network"
   name   = "${var.name}-network"
@@ -24,6 +25,7 @@ module "network" {
   }
 }
 
+# Create an ECR repository
 module "ecr" {
   source   = "./modules/ecr"
   ecr_name = var.name
@@ -34,7 +36,8 @@ output "ecr_repository_url" {
   value       = module.ecr.ecr_repository_url
 }
 
-# // create the cluster
-resource "aws_ecs_cluster" "tf-demo-ecs-cluster" {
-  name = "tf-demo-cluster"
+# Create an ECS cluster
+module "ecs_cluster" {
+  source = "./modules/ecs_cluster"
+  cluster_name = "${var.name}-ecs-cluster"
 }
