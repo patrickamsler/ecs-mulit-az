@@ -86,7 +86,7 @@ resource "aws_ecs_service" "tf-demo-ecs-service" {
   force_new_deployment = true
 
   network_configuration {
-    subnets          = [module.private_subnet_a.id, module.private_subnet_b.id]
+    subnets          = module.network.private_subnet_ids
     assign_public_ip = false
     security_groups = [
       aws_security_group.service_security_group.id,
@@ -104,7 +104,7 @@ resource "aws_ecs_service" "tf-demo-ecs-service" {
 }
 
 resource "aws_security_group" "service_security_group" {
-  vpc_id = module.tf_demo_vpc.vpc_id
+  vpc_id = module.network.vpc_id
 
   ingress {
     from_port       = 0

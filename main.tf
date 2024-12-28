@@ -1,10 +1,10 @@
 provider "aws" {
-  profile = "patrick-private"
+  profile = var.profile
   region  = var.region
   default_tags {
     tags = {
-      Environment = "Test"
-      Owner = "Patrick"
+      Environment = var.environment
+      Owner = var.owner
     }
   }
 }

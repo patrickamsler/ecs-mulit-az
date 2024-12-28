@@ -2,12 +2,12 @@ resource "aws_alb" "application_load_balancer" {
   name               = "tf-demo-alb"
   internal           = false
   load_balancer_type = "application"
-  subnets            = [module.public_subnet_a.id, module.public_subnet_b.id]
+  subnets            = module.network.public_subnet_ids
   security_groups    = [aws_security_group.load_balancer_security_group.id]
 }
 
 resource "aws_security_group" "load_balancer_security_group" {
-  vpc_id = module.tf_demo_vpc.vpc_id
+  vpc_id = module.network.vpc_id
 
   ingress {
     from_port        = 80
@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "target_group" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = module.tf_demo_vpc.vpc_id
+  vpc_id      = module.network.vpc_id
 
   health_check {
     healthy_threshold   = "3"
