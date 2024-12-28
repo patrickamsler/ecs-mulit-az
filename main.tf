@@ -41,3 +41,28 @@ module "ecs_cluster" {
   source = "./modules/ecs_cluster"
   cluster_name = "${var.name}-ecs-cluster"
 }
+
+# Create an ECS task
+module "ecs_task" {
+  source = "./modules/ecs_task"
+  task_family           = "${var.name}-task"
+  cpu                   = "256"
+  memory                = "512"
+  requires_compatibilities = ["FARGATE"]
+  container_definitions = [
+    {
+      name      = var.name
+      image     = "${module.ecr.ecr_repository_url}:latest"
+      memory    = 512
+      cpu       = 256
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+    }
+  ]
+  create_task_role = false # Set to true if your application requires AWS API access
+}
