@@ -51,6 +51,7 @@ module "ecs_task" {
   cpu         = "256"
   memory      = "512"
   requires_compatibilities = ["FARGATE"]
+  log_group_name = "/ecs/${var.name}"
   container_definitions = [
     {
       name      = var.name
@@ -64,6 +65,14 @@ module "ecs_task" {
           hostPort      = 80
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-region"        = var.region
+          "awslogs-group"         = "/ecs/${var.name}"
+          "awslogs-stream-prefix" = var.name
+        }
+      }
     }
   ]
   create_task_role = false # Set to true if your application requires AWS API access
@@ -80,6 +89,10 @@ module "alb" {
   target_type       = "ip"
   health_check_path = "/health"
   listener_port     = 80
+}
+output "alb_url" {
+  description = "The URL of the ALB"
+  value       = module.alb.alb_url
 }
 
 // Create an ECS service

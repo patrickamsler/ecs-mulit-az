@@ -27,3 +27,9 @@ output "alb_security_group_id" {
   description = "The security group ID of the ALB"
   value       = aws_security_group.load_balancer_security_group.id
 }
+
+// output the alb url
+output "alb_url" {
+  description = "The URL of the ALB"
+  value       = "http://${aws_alb.application_load_balancer.dns_name}"
+}

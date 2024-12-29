@@ -35,3 +35,13 @@ variable "create_task_role" {
   type        = bool
   default     = false
 }
+
+variable log_group_name {
+    description = "Name of the CloudWatch log group for the ECS task"
+    type        = string
+}
+
+variable "log_retention_in_days" {
+  default = 30
+  description = "Number of days to retain logs"
+}

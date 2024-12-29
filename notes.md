@@ -13,18 +13,33 @@
 | **monitoring**    | Manages CloudWatch alarms, logs, and metrics for ECS services and ALB.                                     | `aws_cloudwatch_log_group`, `aws_cloudwatch_alarm`, `aws_cloudwatch_dashboard`                                 |
 
 
+# Terraform ECS Demo
+init terraform:
+```bash
+terraform init
+```
+
+First setup ecr repository:
+```bash
+terraform plan -target=module.ecr
+terraform apply -target=module.ecr
+```
+int should output the ecr repository url: ecr_repository_url = "<account_id>.dkr.ecr.<region>.amazonaws.com/ecs-terraform-demo"
+
+
 Get the account id:
 ```bash
 aws sts get-caller-identity --query Account --output text
 ```
-Build the docker image:
+Build the docker image for x86_64:
 ```bash
 cd docker
-docker build -t ecs-terraform-demo .
+docker build --platform linux/amd64 -t ecs-terraform-demo .
 ```
 Test the docker image locally:
 ```bash
-docker run --detach --name tf-demo-app -p 80:80 -i -t tf-demo-app
+docker build -t ecs-terraform-demo .
+docker run --detach --name ecs-terraform-demo -p 80:80 -i -t ecs-terraform-demo
 curl localhost
 ```
 Get the account id:
@@ -35,4 +50,5 @@ Tag the docker image and push it to ECR:
 ```bash
 docker tag ecs-terraform-demo <repo-url>:latest
 aws ecr get-login-password --region <region> --profile <profile> | docker login --username AWS --password-stdin <account_id>.dkr.ecr.<region>.amazonaws.com
+docker push <repo-url>:latest
 ```

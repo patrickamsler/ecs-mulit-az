@@ -42,6 +42,11 @@ resource "aws_iam_role" "task_role" {
   })
 }
 
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name              = var.log_group_name
+  retention_in_days = var.log_retention_in_days # Optional: set log retention
+}
+
 # ECS Task Definition
 resource "aws_ecs_task_definition" "this" {
   family                   = var.task_family
