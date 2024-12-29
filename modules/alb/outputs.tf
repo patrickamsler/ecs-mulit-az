@@ -22,3 +22,8 @@ output "security_group_id" {
   description = "The ID of the ALB security group"
   value       = aws_security_group.load_balancer_security_group.id
 }
+
+output "alb_security_group_id" {
+  description = "The security group ID of the ALB"
+  value       = aws_security_group.load_balancer_security_group.id
+}

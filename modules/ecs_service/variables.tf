@@ -1,52 +1,50 @@
-# variable "service_name" {
-#   description = "The name of the ECS service"
-#   type        = string
-# }
-#
-# variable "cluster_arn" {
-#   description = "The ARN of the ECS cluster where the service will run"
-#   type        = string
-# }
-#
-# variable "task_definition_arn" {
-#   description = "The ARN of the task definition to use for the service"
-#   type        = string
-# }
-#
-# variable "desired_count" {
-#   description = "The desired number of tasks to run"
-#   type        = number
-#   default     = 1
-# }
-#
-# variable "launch_type" {
-#   description = "The launch type to use (FARGATE or EC2)"
-#   type        = string
-#   default     = "FARGATE"
-# }
-#
-# variable "load_balancer" {
-#   description = "Optional load balancer configuration for the service"
-#   type = object({
-#     target_group_arn = string
-#     container_name   = string
-#     container_port   = number
-#   })
-#   default = null
-# }
-#
-# variable "network_configuration" {
-#   description = "Optional network configuration for the service"
-#   type = object({
-#     subnets         = list(string)
-#     security_groups = list(string)
-#     assign_public_ip = string
-#   })
-#   default = null
-# }
-#
-# variable "deployment_controller" {
-#   description = "Type of deployment controller (ECS by default)"
-#   type        = string
-#   default     = "ECS"
-# }
+variable "ecs_service_name" {
+  type        = string
+  description = "Name for the ECS service."
+}
+
+variable "cluster_id" {
+  type        = string
+  description = "The ID (or ARN) of the ECS cluster on which to run the service."
+}
+
+variable "task_definition_arn" {
+  type        = string
+  description = "The task definition to use for the service."
+}
+
+variable "desired_count" {
+  type        = number
+  description = "Number of desired tasks."
+  default     = 1
+}
+
+variable "alb_sg_id" {
+  type        = string
+  description = "Security group ID of the ALB to allow inbound traffic from."
+}
+
+variable "target_group_arn" {
+  type        = string
+  description = "ARN of the target group to register the service with."
+}
+
+variable "container_name" {
+  type        = string
+  description = "Name of the container for the service."
+}
+
+variable "container_port" {
+  type        = number
+  description = "Port on the container to direct traffic to."
+}
+
+variable "subnets" {
+  type        = list(string)
+  description = "List of subnet IDs for the ECS service."
+}
+
+variable "vpc_id" {
+  description = "The ID of the VPC"
+  type        = string
+}
