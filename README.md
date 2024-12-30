@@ -4,7 +4,7 @@
 * [AWS Multi AZ ECS with Terraform](#aws-multi-az-ecs-with-terraform)
   * [Description](#description)
   * [Project Structure](#project-structure)
-  * [Architecture Diagram](#architecture-diagram)
+  * [ECS Components](#ecs-components)
   * [How to create the ECS cluster with Terraform](#how-to-create-the-ecs-cluster-with-terraform)
     * [Deploy new version to ECS](#deploy-new-version-to-ecs)
 <!-- TOC -->
