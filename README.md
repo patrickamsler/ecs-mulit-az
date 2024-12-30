@@ -27,20 +27,6 @@ The project consists of multiple terraform modules:
 | ecs_task    | Configures the ECS Task Definition, including container images, CPU/memory allocation, environment variables, and port mappings. |
 | network     | Sets up the VPC network, public and private subnets, NAT gateways, and related route tables.                                     |
 
-## Architecture Diagram
-
-```
-  Internet
-     |
-   (ALB)
-     |
- [ECS Service] ---> [ECS Tasks] ---> [ECR]
-     |
- [ECS Cluster]
-     |
- (VPC/Network)
-```
-
 ## ECS Components
 
 - **ECS Cluster**: A logical grouping of ECS tasks that run on AWS Fargate or EC2 instances. The ECS cluster is responsible for managing the underlying infrastructure and scheduling tasks on the available resources.
