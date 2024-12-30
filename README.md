@@ -47,7 +47,7 @@ The project consists of multiple terraform modules:
 - **ECS Task Definition**: A blueprint for your application that defines how the Docker containers should be launched and configured. It includes information such as the Docker image, CPU/memory allocation, environment variables, and port mappings.
 - **ECS Task**: An instance of a task definition that runs as a Docker container on an ECS cluster. The task is the smallest deployable unit in ECS and represents a single running instance of your application.
 - **ECS Service**: Ensures that the desired number of tasks are running and healthy. It maintains the desired count of tasks and automatically restarts failed tasks. The ECS service is associated with an Application Load Balancer (ALB) to route traffic to the ECS tasks.
-- **Elastic Container Registry (ECR)**: A fully managed Docker container registry that makes it easy to store, manage, and deploy Docker container images. It integrates with ECS to simplify the deployment of containerized applications.
+- **Elastic Container Registry (ECR)**: Docker container registry that makes to store, manage, and deploy Docker container images.
 
 ## How to create the ECS cluster with Terraform
 
