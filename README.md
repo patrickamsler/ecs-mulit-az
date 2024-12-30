@@ -1,48 +1,103 @@
-# Multiple Availability Zones with Amazon ECS and Terraform
+# AWS Multi AZ ECS with Terraform
 
-## Table of Contents
-
-- [Description](#Description)
-- [Features](#features)
-- [Links](#links)
-- [How to create the AWS environment with terraform](#how-to-create-the-aws-environment-with-terraform)
-- [How to run the demo app](#how-to-run-the-demo-app)
+<!-- TOC -->
+* [AWS Multi AZ ECS with Terraform](#aws-multi-az-ecs-with-terraform)
+  * [Description](#description)
+  * [Project Structure](#project-structure)
+  * [Architecture Diagram](#architecture-diagram)
+  * [How to create the ECS cluster with Terraform](#how-to-create-the-ecs-cluster-with-terraform)
+    * [Deploy new version to ECS](#deploy-new-version-to-ecs)
+<!-- TOC -->
 
 ##  Description
 
 This Github project is a demonstration of how to deploy a Dockerized application using Amazon Elastic Container Service (ECS) on AWS. The infrastructure is defined using Terraform, and includes private and public subnets spread across multiple availability zones. The project is a good starting point for those who want to learn how to use ECS and Terraform together, and want to deploy their application in a highly available and scalable manner on AWS.
 
-## Features
 
-- Uses Terraform to manage infrastructure as code
-- Deploys an AWS ECS cluster with private and public subnets in multiple availability zones
-- Configures the ECS cluster with a load balancer and auto scaling group
-- Provides an example Dockerfile and task definition file
+## Project Structure
 
-## Links
+The project consists of multiple terraform modules:
 
-- [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS ECS](https://aws.amazon.com/ecs/)
-- [ECS with Multiple Availability Zones](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-service-discovery.html)
+| Module      | Description                                                                                                                      |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------|
+| alb         | Manages the AWS Application Load Balancer configuration, including target groups and listeners for routing traffic to ECS tasks. |
+| ecr         | Creates and configures an Elastic Container Registry (ECR) to store, version, and secure Docker container images.                |
+| ecs_cluster | Provisions and manages the AWS ECS cluster, which serves as the logical grouping of AWS Fargate tasks.                           |
+| ecs_service | Defines and deploys an ECS Service, ensuring your ECS tasks remain healthy and the desired count is maintained.                  |
+| ecs_task    | Configures the ECS Task Definition, including container images, CPU/memory allocation, environment variables, and port mappings. |
+| network     | Sets up the VPC network, public and private subnets, NAT gateways, and related route tables.                                     |
 
+## Architecture Diagram
 
-## How to create the AWS environment with terraform
-
-Terraform uses the AWS CLI under the hood. Install the AWS CLI on your machine and configure it to work with your AWS account by running the aws configure command and providing your AWS access key, secret access key, and default region.
-
-The ECS task definition needs to be registered before you apply the terraform script.
-```shell
-aws ecs register-task-definition --profile <aws-profil> --region eu-central-1 --cli-input-json file://./tf-demo-app/tf-demo-task.json
+```
+  Internet
+     |
+   (ALB)
+     |
+ [ECS Service] ---> [ECS Tasks] ---> [ECR]
+     |
+ [ECS Cluster]
+     |
+ (VPC/Network)
 ```
 
-The task definition includes the Docker image to use, the CPU and memory requirements, the networking configuration, and other details needed to launch the container. 
+## ECS Components
 
-Once a task definition is registered, you can create the AWS environment with terraform.
+- **ECS Cluster**: A logical grouping of ECS tasks that run on AWS Fargate or EC2 instances. The ECS cluster is responsible for managing the underlying infrastructure and scheduling tasks on the available resources.
+- **ECS Task Definition**: A blueprint for your application that defines how the Docker containers should be launched and configured. It includes information such as the Docker image, CPU/memory allocation, environment variables, and port mappings.
+- **ECS Service**: Ensures that the desired number of tasks are running and healthy. It maintains the desired count of tasks and automatically restarts failed tasks. The ECS service is associated with an Application Load Balancer (ALB) to route traffic to the ECS tasks.
+- **Elastic Container Registry (ECR)**: A fully managed Docker container registry that makes it easy to store, manage, and deploy Docker container images. It integrates with ECS to simplify the deployment of containerized applications.
+
+## How to create the ECS cluster with Terraform
+
+Terraform uses the AWS CLI under the hood. Install the AWS CLI on your machine and configure it to work with your AWS account by running the aws configure command and providing your AWS access key and secret access key.
+
+- [AWS CLI installation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Terraform setup](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
+First initialize the terraform modules
 ```shell
 terraform init
-terraform plan
 ```
 
+Before you can create the ECS cluster, you need to create an Elastic Container Registry (ECR) to store your Docker images.
+```shell
+terraform plan -target=module.ecr
+terraform apply -target=module.ecr
+```
+Terraform outputs the ECR repository url: ecr_repository_url = "<account_id>.dkr.ecr.<region>.amazonaws.com/ecs-terraform-demo"
+
+After that you need to build the Docker image for the demo app and push it to the ECR repository.
+
+(Optional) You can build and test the docker image locally:
+```bash
+docker build -t ecs-terraform-demo .
+docker run --detach --name ecs-terraform-demo -p 80:80 -i -t ecs-terraform-demo
+curl localhost
+```
+
+Build the docker image for x86_64 before pushing it to the ECR repository:
+```bash
+cd docker
+docker build --platform linux/amd64 -t ecs-terraform-demo .
+```
+
+Get your account id:
+```bash
+aws sts get-caller-identity --query Account --output text
+```
+
+Tag the docker image with the <repo-url>:latest, configure the AWS CLI to authenticate Docker to your ECR registry, and push the image to the ECR repository.
+```bash
+docker tag ecs-terraform-demo <repo-url>:latest
+aws ecr get-login-password --region <region> --profile <profile> | docker login --username AWS --password-stdin <account_id>.dkr.ecr.<region>.amazonaws.com
+docker push <repo-url>:latest
+```
+
+Once the Docker image is pushed to the ECR repository, you can create the ECS cluster with the following commands:
+```shell
+terraform plan
+```
 If everything looks good, run terraform apply to create the resources in the specified AWS account and region.
 ```shell
 terraform apply
@@ -50,45 +105,18 @@ terraform apply
 
 Terraform creates following components:
 * VPC with two private and two public subnets
-* ECR container repository
 * ECS cluster
 * ECS task definition, tasks and a service for the demo app
 * ALB in the public subnet
 
-The environment can be destroyed with:
+After the Terraform apply command completes, you can access the demo app by navigating to the ALB DNS name in your web browser.
+
+For cleanup, you can run the following command to destroy all the resources created by Terraform:
 ```shell
 terraform destroy
 ```
 
-## How to run the demo app
-
-Build the docker image
-```shell
-cd tf-demo-app
-docker build -t tf-demo-app .
-```
-
-Start and test the container locally
-```shell
-docker run --detach --name tf-demo-app -p 80:80 -i -t tf-demo-app
-curl localhost
-```
-
-Tag and push to ECR Repository
-```shell
-docker tag tf-demo-app 663216139861.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
-aws ecr get-login-password --region eu-central-1 --profile <aws-profil> | docker login --username AWS --password-stdin 663216139861.dkr.ecr.eu-central-1.amazonaws.com
-docker push 663216139861.dkr.ecr.eu-central-1.amazonaws.com/tf-demo-app:latest
-```
-
-Tag and push the image to Docker Hub Repository
-```shell
-docker tag tf-demo-app <repo>/tf-demo-app:latest
-docker login
-docker push <repo>/tf-demo-app:latest
-```
-
-Deploy new version to ECS
+### Deploy new version to ECS
 1. update the image in the task definition
 2. create new revision of the task definition
 3. update ecs service to use the new task definition
@@ -97,4 +125,4 @@ aws ecs register-task-definition --profile <aws-profil> --region eu-central-1 --
 aws ecs update-service --profile <aws-profil> --region eu-central-1 --cluster tf-demo-cluster --service tf-demo-ecs-service --task-definition tf-demo-task:<revision>
 ```
 
-Access demo app in Web Browser http://tf-demo-alb-1374846504.eu-central-1.elb.amazonaws.com/
+
